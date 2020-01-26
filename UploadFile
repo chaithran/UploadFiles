@@ -1,0 +1,52 @@
+public async Task<JsonResult> UploadFile()
+        {
+            List<string> filePaths = new List<string>();
+            if (Request.Files.Count > 0)
+            {
+                try
+                {
+                    //  Get all files from Request object  
+                    HttpFileCollectionBase files = Request.Files;
+                    for (int i = 0; i < files.Count; i++)
+                    {
+                        HttpPostedFileBase file = files[i];
+                        string fname;
+
+                        // Checking for Internet Explorer  
+                        if (Request.Browser.Browser.ToUpper() == "IE" || Request.Browser.Browser.ToUpper() == "INTERNETEXPLORER")
+                        {
+                            string[] testfiles = file.FileName.Split(new char[] { '\\' });
+                            fname = testfiles[testfiles.Length - 1];
+                        }
+                        else
+                        {
+                            fname = file.FileName;
+                        }
+
+                        // Get the complete folder path and store the file inside it.  
+                        string basePath = (Server.MapPath("~/App_Data/"));
+                        DocumentVM createSampleFolder = new DocumentVM("Sample", basePath);
+                        createSampleFolder.CreateTheFolder();
+                        string firstFolderCreated = createSampleFolder.GetTheFolerPath();
+                        DocumentVM createDocFolder = new DocumentVM("Doc", firstFolderCreated);
+                        createDocFolder.CreateTheFolder();
+                        string thetargetFolderCreated = createDocFolder.GetTheFolerPath();
+                        string fullPath = thetargetFolderCreated + "/";
+                        fname = Path.Combine(fullPath, fname);
+                        file.SaveAs(fname);
+                        filePaths.Add(fname);
+                    }
+                    TempData["filePaths"] = filePaths;
+                    // Returns message that successfully uploaded  
+                    return Json("File Uploaded Successfully!");
+                }
+                catch (Exception ex)
+                {
+                    return Json("Error occurred. Error details: " + ex.Message);
+                }
+            }
+            else
+            {
+                return Json("No files selected.");
+            }
+        }
